@@ -217,7 +217,7 @@ AND ENAME NOT LIKE '_L%';
 --문자함수 upper lower initcap length substr instr replace lpad,rpad concat trim,ltrim,rtrim
 --숫자함수 round trunc ceil,floor mod  
 --날짜함수 add_months months_between next_day,last_day round trunc
-
+--자료형변환함수 to_char to_number to_date
 
 --=문=자=함=수= 
 
@@ -347,4 +347,200 @@ TRUNC(SYSDATE,'DDD') AS FORMAT_DDD,
 TRUNC(SYSDATE,'HH')AS FORMAT_HH
 FROM DUAL;
 
+
+--=자=료=형=변=환=함=수=
+
+--TO_CHAR : 날짜,숫자->문자
+SELECT SYSDATE, TO_CHAR(SYSDATE,'YYYY-MM-DD HH24:MI:SS') AS 현재시간     --날짜->문자
+FROM DUAL;
+SELECT hiredate , TO_CHAR(HIREDATE,'YYYY-MM-DD HH24:MI:SS') AS 입사일자
+FROM EMP;
+
+SELECT TO_CHAR(123456,'L999,999')                                                          -숫자->문자
+FROM DUAL;
+SELECT SAL, TO_CHAR(SAL, 'L999,999'),TO_CHAR(SAL,'$9,9999.9')                       
+FROM EMP;
+
+--TO_NUMBER : 문자->숫자
+SELECT '20000' - 10000   --문자형인 숫자는 자동으로 숫자데이터로 형변환이 일어남 <<암시적 형변환>>
+FROM DUAL;
+
+SELECT TO_NUMBER('2,400', '999,999') - TO_NUMBER('5,000', '999,999')
+FROM DUAL;                      
+
+--TO_DATE : 문자 -> 날짜
+SELECT TO_DATE('2022-05-21',  'YYYY-MM-DD') AS 과거
+FROM DUAL;
+
+SELECT*
+FROM EMP
+WHERE HIREDATE > TO_DATE('19820101', 'YYYY/MM/DD');
+
+
+--=N=U=L=L=처=리=함=수=
+
+--NVL함수 :  NULL이 아닐 경우 데이터를 그대로 반환, NULL인 경우 지정한 데이터 반환
+--NVL은 NULL 데이터의 타입과 같은 타입을 변경해야 한다.  ( NVL(숫자,숫자) NVL(문자,문자)  )
+SELECT ENAME 사원명,SAL,SAL*12+NVL(COMM,0)AS 연봉, COMM
+FROM EMP;
+
+
+SELECT ENAME,JOB,NVL(TO_CHAR(MGR,'9999') , 'CEO') AS MGR
+FROM EMP
+WHERE MGR IS NULL;
+
+--NVL2함수 : NULL이 아닐 경우 데이터반환 OR 계산식 , NULL인 경우 지정한 데이터 반환 OR 계산식
+--NVL2은 NULL 데이터 타입과 같은 타입이 아니여도 상관없다.
+SELECT COMM, NVL2(COMM,'O','X')
+FROM EMP;
+
+--=조=건=문=함=수=
+
+--DECODE 함수 : 특정조건에 반환할 데이터를 설정 (SWTICH-CASE)
+--단순비교
+SELECT ENAME,JOB,DEPTNO,
+             DECODE(DEPTNO,10,'AAA',20,'BBB',30,'CCC','기타') AS 부서명
+FROM EMP;
+             
+
+--CASE문 : 특정조건에 반환할 데이터를 설정 (IF문)
+--범위를 조건으로 설정 할 수 있다.
+SELECT EMPNO,ENAME,JOB,DEPTNO,
+CASE 
+             WHEN DEPTNO=10 THEN 'AAA'
+             WHEN DEPTNO=20 THEN 'BBB'
+             WHEN DEPTNO=30 THEN 'CCC'
+             ELSE '기타'
+END AS 부서명
+FROM EMP;
+
+SELECT ENAME,JOB,SAL,
+CASE
+             WHEN SAL BETWEEN 3000 AND 5000 THEN '임원'
+             WHEN SAL >= 2000 AND SAL < 3000 THEN '관리자'
+             WHEN SAL >= 500 AND SAL <2000 THEN '사원'
+             ELSE '기타'
+END AS 직무
+FROM EMP;
+
+
+--==F=U=N=C=T=I=O=N====E=N=D==================================================================
+
+SELECT DATE_OF_BIRTH ,TO_CHAR(DATE_OF_BIRTH,'YYYY/MM/DD'),
+            ROUND((SYSDATE - DATE_OF_BIRTH) /365) ||'살' AS 나이
+FROM CUSTOMERS;
+
+
+SELECT DATE_OF_BIRTH ,ROUND((SYSDATE - DATE_OF_BIRTH) /365) ||'살' AS 나이,
+CASE   
+          WHEN  ROUND((SYSDATE - DATE_OF_BIRTH) /365) >=10 AND ROUND((SYSDATE - DATE_OF_BIRTH) /365) <30 THEN '10대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 20 AND 29 THEN '20대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 30 AND 39 THEN '30대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 40 AND 49 THEN '40대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 50 AND 59 THEN '50대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 60 AND 69 THEN '60대'
+          WHEN ROUND((SYSDATE - DATE_OF_BIRTH) /365) BETWEEN 70 AND 79 THEN '70대'
+          ELSE '기타'
+END AS 연령대
+FROM CUSTOMERS;
+
+--Q1
+SELECT EMPNO, RPAD(SUBSTR(EMPNO, 1, 2), 4, '*') AS MASKING_EMPNO,
+       ENAME, RPAD(SUBSTR(ENAME, 1, 1), LENGTH(ENAME), '*') AS MASKING_ENAME
+FROM EMP
+WHERE LENGTH(ENAME) >= 5  AND LENGTH(ENAME) < 6; 
+
+--Q2
+SELECT EMPNO, ENAME, SAL, TRUNC(SAL / 21.5, 2) AS DAY_PAY,
+       ROUND(SAL / 21.5 / 8, 1) AS TIME_PAY
+FROM EMP; 
+
+--Q3
+SELECT EMPNO, ENAME, HIREDATE,
+       TO_CHAR(NEXT_DAY(ADD_MONTHS(HIREDATE, 3), 'ㅁ ㅁ ㅁ'), 'YYYY-MM-DD') AS R_JOB,
+       NVL(TO_CHAR(COMM), 'N/A') AS COMM
+  FROM EMP; 
+
+--Q4
+SELECT EMPNO, ENAME, MGR,
+CASE
+          WHEN MGR IS NULL THEN '0000'
+          WHEN SUBSTR(MGR, 1, 2) = '78' THEN '8888'
+          WHEN SUBSTR(MGR, 1, 2) = '77' THEN '7777'
+          WHEN SUBSTR(MGR, 1, 2) = '76' THEN '6666'
+          WHEN SUBSTR(MGR, 1, 2) = '75' THEN '5555'
+          ELSE TO_CHAR(MGR)
+END AS CHG_MGR
+FROM EMP;
+
+--=MULTI-ROW=F=U=N=C=T=I=O=N====S=T=A=R=T====================================================
+
+--=다=중=행= =함=수=
+--여러행을 바탕으로 하나의 결과 값을 도출
+--일반컬럼과 같이 사용 불가
+--크기 비교가 가능한 모든 타입에 사용가능
+
+--SUM : 합계
+SELECT SUM(SAL)
+FROM EMP;
+
+--AVG : 평균
+SELECT AVG(SAL)
+FROM EMP;
+
+--COUNT : 데이터 개수
+SELECT COUNT(SAL),COUNT(COMM)
+FROM EMP;
+
+--MAX, MIN : 최댓값,최솟값
+SELECT MAX(SAL),MIN(SAL)
+FROM EMP;
+
+SELECT MIN(HIREDATE),MAX(HIREDATE)
+FROM EMP
+WHERE deptno =20;
+
+--=G=R=O=U=P= =B=Y=절=
+--특정 열 또는 데이터를 기준으로 데이터를 그룹으로 묶는다.
+
+--SELECT [컬럼명]
+--FROM   [테이블명]
+--WHERE  [조건식]
+--GROUP BY [컬럼명 그룹화]  =>SELECT문에 그룹함수와 같이 사용할 수 있다.
+--ORDER BY [컬럼명 정렬]  ==>맨 마지막에 작성
+
+SELECT AVG(SAL), DEPTNO 
+FROM EMP
+GROUP BY DEPTNO;
+
+SELECT DEPTNO,JOB,AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO,JOB
+ORDER BY DEPTNO, JOB DESC;
+
+--=H=A=V=I=N=G=절=
+--GROUP BY절이 있는 곳에서만 사용 가능하다.
+--그룹화된 결과 값의 범위를 제한하는데 사용한다. 
+--조건식을 작성할때 그룹함수를 사용한다.
+
+--SELECT [컬럼명]
+--FROM   [테이블명]
+--WHERE  [조건식]   => 그룹함수 사용불가/GROUP BY, HAVING 보다 먼저 실행된다***
+--GROUP BY [컬럼명 그룹화]  =>SELECT문에 그룹함수와 같이 사용할 수 있다.
+--HAVING  [출력 그룹을 제한하는 조건식] => 그룹함수를 사용한다
+--ORDER BY [컬럼명 정렬]  ==>맨 마지막에 작성
+
+
+SELECT AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO
+HAVING AVG(SAL) >= 2000
+ORDER BY DEPTNO;
+
+SELECT DEPTNO, JOB, AVG(SAL)
+FROM EMP
+WHERE SAL <=3000
+GROUP BY DEPTNO, JOB
+HAVING AVG(SAL) >=2000
+ORDER BY DEPTNO, JOB;
 
