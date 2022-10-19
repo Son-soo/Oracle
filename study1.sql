@@ -2,7 +2,7 @@
 --SELECT (컬럼명)
 --FROM (테이블명)
 
-desc emp;
+desc emp;  --테이블의 컬럼구조
 
 --전체데이터
 Select empno,ename,job,mgr,hiredate,sal,comm,deptno
@@ -12,7 +12,7 @@ select*
 from emp;
 
 --부분컬럼 데이터
-select empno,ename,sal
+select ename,empno,sal
 from emp;
 
 select deptno
@@ -34,7 +34,7 @@ from emp;
 --데이터정렬
 --select 컬럼명
 --from 테이블명
---ORDR BY [열이름]; or ASC; 오름차순으로 정렬   // ORDER BY [열이름] DESC; 내림차순으로 정렬
+--ORDER BY [열이름] or ASC; 오름차순으로 정렬   // ORDER BY [열이름] DESC; 내림차순으로 정렬
 --ORDER BY [열이름] ASC, [다른열이름] DESC; // 오름차순과 내림차순 동시에 사용
 
 select *
@@ -66,7 +66,7 @@ WHERE HIREDATE < '1982/01/01';
 --NOT 논리부정 연산자
 SELECT*
 FROM EMP
-WHERE SAL !=3000;  --( < >=3000)
+WHERE SAL !=3000;  -- < >=3000
 
 SELECT*
 FROM EMP
@@ -77,7 +77,7 @@ SELECT*
 FROM emp
 WHERE deptno = 30 AND JOB = 'SALESMAN' and EMPNO = 7499; --(Table에 있는 data중에 문자값은 대소문자 구분 필수)
 
--- OR 두개 이상의 조건중에 하나이상 참인 경우
+-- OR 두개 이상의 조건중에 하나 이상 참인 경우
 SELECT *
 FROM EMP
 WHERE DEPTNO = 10 OR SAL >= 2000;
@@ -264,7 +264,7 @@ SELECT RPAD('990103-',14,'*')
 FROM DUAL;
 
 --CONCAT : 두 문자열 데이터를 합침
-SELECT CONCAT(empno,ename), empno ||''|| ename
+SELECT CONCAT(empno,ename), empno ||' + '|| ename
 FROM EMP;
 
 --TRIM,LTRIM,RTRIM : 특정 문자를 지움
@@ -302,6 +302,16 @@ FROM EMP
 WHERE MOD(EMPNO,2) = 1;
 
 --=날=짜=함=수= 
+
+--SYSDATE : 현재에 년/월/일/시/분/초
+SELECT SYSDATE
+FROM DUAL;
+
+SELECT SYSDATE - HIREDATE AS 근무일수 
+FROM EMP;
+
+SELECT TRUNC((SYSDATE - HIREDATE) / 365) AS 근속년수
+FROM EMP; 
 
 --ADD_MONTHS : 몇 개월 이후 날짜를 구함
 SELECT SYSDATE,
