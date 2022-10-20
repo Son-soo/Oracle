@@ -641,6 +641,8 @@ SELECT ENAME,SAL,D.DEPTNO,DNAME
 FROM EMP E RIGHT OUTER JOIN DEPT D
 ON E.DEPTNO = D.DEPTNO;
 
+--=J=O=I=N==E=N=D=========================================================================
+
 -- Q1
 SELECT DEPTNO, D.DNAME, E.EMPNO, E.ENAME, E.SAL
   FROM EMP E NATURAL JOIN DEPT D
@@ -673,3 +675,97 @@ SELECT D.DEPTNO, D.DNAME,
               LEFT OUTER JOIN EMP E2
                 ON (E.MGR = E2.EMPNO)
 ORDER BY D.DEPTNO, E.EMPNO; 
+
+--=S=U=B=Q=U=E=R=Y==S=T=A=R=T==========================================
+--==서브쿼리
+--SELECT 구문을 중첩해서 사용하는것(WHERE)
+
+
+SELECT ENAME, MAX(SAL)
+FROM EMP;                    --서브쿼리
+
+SELECT ENAME,SAL
+FROM EMP
+WHERE SAL = ( SELECT MAX(SAL) FROM EMP );        --메인쿼리
+
+SELECT DEPTNO
+FROM EMP
+WHERE ENAME = 'SCOTT';
+
+SELECT DNAME
+FROM DEPT
+WHERE DEPTNO = 20;
+
+SELECT DNAME
+FROM DEPT
+WHERE DEPTNO =(SELECT DEPTNO
+                       FROM EMP
+                       WHERE ENAME = 'SCOTT');
+                       
+SELECT ENAME,DEPTNO
+FROM EMP
+WHERE DEPTNO = ( 
+                           SELECT DEPTNO
+                           FROM DEPT
+                           WHERE LOC = 'DALLAS' );
+ 
+SELECT ENAME,SAL
+FROM EMP
+WHERE MGR = (
+                         SELECT EMPNO
+                         FROM EMP
+                         WHERE ENAME = 'KING' );                
+
+--==다중행 서브쿼리==    
+--IN / ANY / ALL / (SOME, EXISTS 잘사용하지 않는다.)
+
+--IN : 메인쿼리의 데이터가 서브쿼리의 결과 중 하나라도 일치한 데이터가 있으면 TRUE
+SELECT*
+FROM EMP
+WHERE SAL IN (5000,3000,2850);
+
+SELECT*
+FROM EMP
+WHERE SAL IN (
+                     SELECT MAX(SAL)
+                     FROM EMP
+                     GROUP BY DEPTNO );
+
+
+--ANY,SOME : 메인쿼리의 조건식을 만족하는 서브쿼리의 결과가 하나 이상이면 TRUE                         
+SELECT *
+FROM EMP
+WHERE SAL = ANY (
+                     SELECT MAX(SAL)
+                     FROM EMP
+                     GROUP BY DEPTNO );
+                     
+SELECT *
+FROM EMP
+WHERE SAL > SOME (
+                     SELECT MAX(SAL)
+                     FROM EMP
+                     GROUP BY DEPTNO );                     
+                     
+
+--ALL : 메인쿼리의 조건식을 서브쿼리의 결과 모두가 만족하면 TRUE
+SELECT*
+FROM EMP
+WHERE SAL > ALL (SELECT SAL
+                         FROM EMP
+                         WHERE DEPTNO = 30);
+
+
+--EXISTS : 서브쿼리의 결과가 존재하면(행이1개 이상) TRUE
+SELECT *
+FROM EMP
+WHERE EXISTS (SELECT DNAME
+                    FROM DEPT
+                    WHERE DEPTNO = 10);
+                    
+--다중열 서브쿼리
+SELECT *
+FROM EMP
+WHERE (DEPTNO , SAL) IN ( SELECT DEPTNO , MAX(SAL)
+                                   FROM EMP
+                                   GROUP BY DEPTNO);
