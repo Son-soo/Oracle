@@ -356,7 +356,7 @@ FROM DUAL;
 SELECT hiredate , TO_CHAR(HIREDATE,'YYYY-MM-DD HH24:MI:SS') AS 입사일자
 FROM EMP;
 
-SELECT TO_CHAR(123456,'L999,999')                                                          -숫자->문자
+SELECT TO_CHAR(123456,'L999,999')                                                          --숫자->문자
 FROM DUAL;
 SELECT SAL, TO_CHAR(SAL, 'L999,999'),TO_CHAR(SAL,'$9,9999.9')                       
 FROM EMP;
@@ -604,7 +604,7 @@ FROM EMP E , DEPT D
 WHERE E.DEPTNO(+) = D.DEPTNO;
 
 --------------------------------------
---=====ANSI JOIN====(표준조인 방식)
+--=====ANSI JOIN====(표준 조인 방식)
 --CROSS JOIN
 --INNER JOIN(EQUI, NON EQUI, SELF)
 --OUTER JOIN( (+) ) // [LEFT, RIGHT, FULL] OUTER JOIN
@@ -704,8 +704,7 @@ WHERE DEPTNO =(SELECT DEPTNO
                        
 SELECT ENAME,DEPTNO
 FROM EMP
-WHERE DEPTNO = ( 
-                           SELECT DEPTNO
+WHERE DEPTNO = (  SELECT DEPTNO
                            FROM DEPT
                            WHERE LOC = 'DALLAS' );
  
@@ -769,3 +768,372 @@ FROM EMP
 WHERE (DEPTNO , SAL) IN ( SELECT DEPTNO , MAX(SAL)
                                    FROM EMP
                                    GROUP BY DEPTNO);
+                                   
+--=S=U=B=Q=U=E=R=Y==E=N=D=============================================          
+
+
+--=D=M=L==S=T=A=R=T====================================================
+
+--DML(Data Manipulation Language) : 테이블에 데이터를 추가, 변경, 삭제 할때 사용
+--INSERT, UPDATE, DELETE
+
+
+--====INSERT==== : 테이블에 DATA 삽입
+
+--INSERT INTO 테이블명 (컬럼명1, 컬럼명2,........)
+--VALUES (값1 , 값2,....)
+
+--컬럼과 값의 타입과 갯수가 일치해야 한다
+--작성 순서대로 1 : 1 매칭된다.
+
+CREATE TABLE DEPT_TEMP
+AS
+SELECT * FROM DEPT;
+
+SELECT *
+FROM DEPT_TEMP;
+
+INSERT INTO DEPT_TEMP --모든컬럼에 입력할 시 컬럼생략 가능 (DEPTNO,DNAME,LOC)
+VALUES(50,'DATABASE','SEOUL');
+
+SELECT * FROM DEPT_TEMP;
+
+INSERT INTO DEPT_TEMP(DEPTNO,DNAME)
+VALUES(60,'JSP');
+
+INSERT INTO DEPT_TEMP 
+VALUES(70,'HTML','SEOUL');
+
+INSERT INTO DEPT_TEMP (DEPTNO,DNAME) 
+VALUES(50,'DATABASE');--암시적 NULL 데이터 삽입
+
+INSERT INTO DEPT_TEMP  (DEPTNO,DNAME,LOC)
+VALUES(50,'DATABASE',NULL); --명시적 NULL 데이터 삽입
+
+--날 짜 데 이 터 삽입 
+
+CREATE TABLE EMP_TEMP
+AS SELECT * FROM EMP
+WHERE 1 != 1;
+
+SELECT* FROM EMP_TEMP;
+
+INSERT INTO EMP_TEMP(EMPNO,ENAME,JOB,MGR,HIREDATE,SAL,COMM,DEPTNO)
+VALUES(9999, '홍길동' , 'PRESIDENT' , NULL , '2001/01/01', 5000, 1000, 10);
+
+INSERT INTO EMP_TEMP(EMPNO,ENAME,JOB,MGR,HIREDATE,SAL,COMM,DEPTNO)
+VALUES(3111, '심청이' , 'MANAGER' , 9999 , SYSDATE , 4000, NULL, 30);
+
+
+--====UPDATE==== : 테이블에 DATA를 수정(변경)
+
+--UPDATE 테이블명
+--SET 컬럼명 = 값, 컬럼명 = 값, ....
+--WHERE 조건식
+
+--조건식을 사용하지 않으면 모든 열의 데이터가 변경 됨
+--ROLLBACK; 을 사용해서 수정한 내용을 되돌릴 수 있다.
+
+CREATE TABLE DEPT_TEMP2
+AS SELECT *FROM DEPT;
+
+SELECT*FROM DEPT_TEMP2;
+
+DROP TABLE DEPT_TEMP2;
+
+UPDATE DEPT_TEMP2
+SET LOC = 'SEOUL' , DNAME = 'DATABASE'
+WHERE DEPTNO = 40;
+
+
+--====DELETE==== : 테이블에 DATA를 삭제
+
+--DELETE FROM 테이블명
+--WHERE 조건식
+
+--조건절을 사용하지 않으면 모든 데이터가 삭제 된다.
+
+CREATE TABLE EMP_TEMP2
+AS SELECT * FROM EMP;
+
+DROP TABLE EMP_TEMP2;
+
+SELECT*FROM EMP_TEMP2;
+
+DELETE FROM EMP_TEMP2
+WHERE JOB = 'PRESIDENT';
+
+DELETE FROM EMP_TEMP2
+WHERE ENAME = 'SCOTT';
+
+ROLLBACK;
+
+--DROP TABLE [테이블이름]; 테이블 전체 삭제
+--DELETE FROM [테이블이름]; 테이블 안 데이터 삭제
+
+
+--=D=M=L==E=N=D========================================================
+
+
+--=T=R=A=N=S=A=C=T=I=O=N==S=T=A=R=T===================================
+
+--TCL : Transaction Control Language : 데이터의 영구저장 또는 취소 (트랜잭션)
+---COMMIT, ROLLBACK, SAVEPOINT
+
+--====COMMIT : 보류데이터 영구 저장(테이블이 데이터 반영) 트랜잭션 종료
+--====ROLLBACK : 보류데이터 변경 취소(테이블이 데이터 미 반영) 직전 커밋 단계로 회귀
+--====SAVEPOINT : ROLLBACK 할 포인트 지정 (ANSI 표준 SQL 아님)
+
+CREATE TABLE DEPT01
+AS SELECT * FROM DEPT;
+
+SELECT*FROM DEPT01;
+
+DELETE FROM DEPT01;
+
+COMMIT;
+ROLLBACK;
+
+
+-- 트랜잭션 적용 유무
+DELETE FROM DEPT01; -- 롤백 가능
+
+TRUNCATE TABLE DEPT01; -- 롤백이 불가능 
+
+
+--=T=R=A=N=S=A=C=T=I=O=N==E=N=D=======================================
+
+
+--==D=D=L=======S=T=A=R=T===============================================
+
+--DDL(Data Definition Language) : 데이터를 생성,삭제,변경하는 명령어
+--CREATE(생성), ALTER(변경), DROP(삭제), RENAME, TRUNCATE
+
+--==CREATE
+--CREATE TABLE 테이블명 (
+--            컬럼명1 타입,
+--            컬럼명2 타입,
+--            컬럼명3 타입    );
+
+
+CREATE TABLE EMP_DDL(
+                --사번,이름,직책,관리자,입사일,급일,성과급,부서번호
+                EMPNO NUMBER(4), ENAME VARCHAR2(10), JOB VARCHAR2(9), 
+                MGR NUMBER(4), HIREDATE DATE, SAL NUMBER(7,2), COMM NUMBER(7,2) , 
+                DEPTNO NUMBER (2)        );
+
+DESC EMP_DDL;
+
+
+INSERT INTO EMP_DDL
+VALUES(9999,'홍길동','MANAGER',0001,SYSDATE,1000,NULL,10);
+
+SELECT* FROM EMP_DDL;
+
+CREATE TABLE DEPT_DDL  --테이블 복사
+AS SELECT *FROM DEPT;
+
+CREATE TABLE DEPT_30 --부분 복사
+AS SELECT* FROM DEPT
+WHERE DEPTNO = 30;
+
+--==ALTER 
+--테이블에 새 열을 추가 또는 삭제 열의 자료형 또는 길이를 변경
+
+CREATE TABLE EMP_ALTER
+AS SELECT *FROM EMP;
+
+SELECT * FROM EMP_ALTER;
+
+--RENAME : 열 이름 변경
+ALTER TABLE EMP_ALTER
+RENAME COLUMN HP TO TEL;
+
+SELECT*FROM EMP_ALTER;
+
+--MODIFY : 열의 자료형 변경
+ALTER TABLE EMP_ALTER
+MODIFY EMPNO NUMBER(5);
+
+--DROP : 특정 열을 삭제
+ALTER TABLE EMP_ALTER
+DROP COLUMN TEL;
+
+SELECT*FROM EMP_ALTER;
+
+--==RENAME : 테이블 이름 변경
+RENAME EMP_ALTER TO EMP_RENAME;
+SELECT*FROM EMP_RENAME;
+
+--==TRUNCATE : 테이블의 데이터를 삭제
+TRUNCATE TABLE EMP_RENAME;
+SELECT * FROM EMP_RENAME;
+
+--==DROP : 테이블 삭제
+DROP TABLE EMP_RENAME;
+
+DESC EMP_RENAME;
+
+--==D=D=L=======E=N=D===============================================
+
+
+
+-- Q1
+CREATE TABLE EMP_HW        ( 
+     EMPNO    NUMBER(4), 
+     ENAME    VARCHAR2(10), 
+     JOB      VARCHAR2(9), 
+     MGR      NUMBER(4), 
+     HIREDATE DATE, 
+     SAL      NUMBER(7, 2), 
+     COMM     NUMBER(7, 2), 
+     DEPTNO   NUMBER(2)        ); 
+
+-- Q2
+ALTER TABLE EMP_HW 
+  ADD BIGO VARCHAR2(20);
+
+-- Q3
+ALTER TABLE EMP_HW 
+MODIFY BIGO VARCHAR2(30); 
+
+-- Q4
+ALTER TABLE EMP_HW 
+RENAME COLUMN BIGO TO REMARK; 
+
+-- Q5
+INSERT INTO EMP_HW 
+SELECT EMPNO, ENAME, JOB, MGR, 
+HIREDATE, SAL, COMM, DEPTNO, NULL 
+FROM EMP; 
+
+SELECT*
+FROM EMP_HW;
+
+-- Q6
+DROP TABLE EMP_HW;
+
+
+--=O=B=J=E=C=T==S=T=A=R=T============================================================
+
+--데이터사전, 인덱스, 뷰, 시퀀스, 동의어
+
+--==데이터사전(Data dictionary) : 데이터베이스 운영에 중요한 데이터 보관(windows개념) <=> 사용자 데이터(program files)
+select owner, table_name
+from all_tables;
+
+
+--====인덱스 : 검색 성능의 향상을 위해 사용하는 객체
+--SELECT 구문의 검색 속도를 향상 시킨다.(전체 레코드의 3%~5% 정도일 때)
+--INDEX객체를 컬럼에 생성해서 사용한다
+
+--CREATE INDEX 인덱스명
+--     ON 테이블명    ( 컬럼명 ASC OR DESC,
+--                         컬럼명 ASC OR DESC,
+--                         ...                      );
+
+CREATE TABLE EMP01
+AS SELECT*FROM EMP;
+
+INSERT INTO EMP01
+SELECT*FROM EMP01;
+
+INSERT INTO EMP01(EMPNO,ENAME)
+VALUES (1111,'BTS');
+
+--INDEX 객체를 생성하기 전 ( 0.035초 )
+SELECT EMPNO,ENAME
+FROM EMP01
+WHERE ENAME = 'BTS';
+
+--INDEX 객체 생성
+CREATE INDEX IDX_EMP01_ENAME
+ON EMP01(ENAME);
+
+--INDEX 객체를 생성 후 ( 0.001초 )
+SELECT EMPNO,ENAME
+FROM EMP01
+WHERE ENAME = 'BTS';
+
+--INDEX 삭제
+DROP INDEX IDX_EMP01_ENAME;
+
+--테이블 삭제 후 원상복구
+--SHOW RECYCLEBIN; (삭제대기 데이터 확인)
+
+--FLASHBACK TABLE [복구 할 테이블명]   (원상복구)
+--TO BEFORE DROP;
+
+--PURGE RECYCLEBIN; (휴지통 비우기)
+
+
+--==VIEW : 
+--==시퀀스 :
+--==동의어 : 
+
+
+--=O=B=J=E=C=T==E=N=D=============================================================
+
+--==C=O=N=S=T=R=A=I=N=T====S=T=A=R=T==============================================
+
+
+--제약 조건(무결성) : 잘못된 값이 데이터로 사용되는 것을 막는 것 (데이터를 제약하는 특수한 규칙)
+
+--====NOT NULL :  NULL을 허용하지 않는다. 중복허용
+CREATE TABLE EMP02(
+           EMPNO NUMBER(4) NOT NULL, 
+           ENAME VARCHAR2(10) NOT NULL, 
+           JOP VARCHAR2(9),  DEPTNO NUMBER(2) );
+           
+INSERT INTO EMP02
+          VALUES (8888,'2SOON','MANEGER',20);
+
+SELECT * FROM EMP02;
+DROP TABLE EMP02;
+DELETE FROM EMP02;
+
+--====UNIQUE : 중복불가 , NULL은 중복 제외
+CREATE TABLE EMP02(
+           EMPNO NUMBER(4) UNIQUE, 
+           ENAME VARCHAR2(10) NOT NULL UNIQUE, --제약 조건 여러개 사용가능
+           JOP VARCHAR2(9),  DEPTNO NUMBER(2) );
+           
+INSERT INTO EMP02
+          VALUES (8888,'2SOON','MANEGER',20);           
+           
+INSERT INTO EMP02
+          VALUES (8238,'SON','MANEGER',20);
+
+SELECT * FROM EMP02;
+DROP TABLE EMP02;
+DELETE FROM EMP02;
+
+--====PRIMARY KEY : 중복불가, NULL도 중복불가(테이블에 한번만 지정가능)
+CREATE TABLE EMP02(
+           EMPNO NUMBER(4) PRIMARY KEY, 
+           ENAME VARCHAR2(10) NOT NULL, 
+           JOP VARCHAR2(9),  DEPTNO NUMBER(2) );
+           
+INSERT INTO EMP02
+          VALUES (8888,'2SOON','MANEGER',20);           
+           
+INSERT INTO EMP02
+          VALUES (8238,'SON','MANEGER',20);
+
+SELECT * FROM EMP02;
+DROP TABLE EMP02;
+DELETE FROM EMP02;           
+
+--====FOREIGN KEY : 다른 컬럼에 존재하는 값만 입력 가능
+
+CREATE TABLE EMP02(
+           EMPNO NUMBER(4) CONSTRAINT EMP02_EMPNO_PK PRIMARY KEY, 
+           ENAME VARCHAR2(10) CONSTRAINT EMP02_ENAME_NN NOT NULL, 
+           JOP VARCHAR2(9),  DEPTNO NUMBER(2) );
+
+
+
+--====CHECK : 설정한 조건식을 만족하는 데이터만 입력 가능
+
+
+
