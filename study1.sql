@@ -1179,8 +1179,7 @@ WHERE ROWNUM <=5;
 --DML *[U]pdate 
 --DML *[D]elete 
 
---====시퀀스 :
---자동으로 번호를 증가시키는 기능수행
+--====시퀀스 : 자동으로 번호를 증가시키는 기능수행
 
 --CREATE SEQUENCE 시퀀스명
 --[INCREMENT BY n] : 번호의 증가값
@@ -1455,7 +1454,7 @@ CREATE TABLE TEST( ID VARCHAR2(10 );
 INSERT INTO TEST VALUES('AAA');
 --DBA
 CREATE USER NBAC IDENTIFIED BY 1234;
-GRANT DBA,CONNECT,RESOURCE TO NBAC;  --SYSTEM == NBAC
+GRANT DBA TO NBAC;  --SYSTEM == NBAC
 
 CREATE USER USER03 IDENTIFIED BY 1234;
 
@@ -1493,5 +1492,410 @@ REVOKE MROLE2 FROM USER04;
 DROP ROLE MROLE2;
 --계정 객체 활성화/비활성화
 SET ROLE ALL;
+
+
+--==사=용=자=, =권=한=, =롤= =관=리===E=N=D=======================================
+
+
+--==P=L=/=S=Q=L=====S=T=A=R=T================================================
+--Procedural Language / SQL
+--확장되어진 SQL언어(ORACLE 전용)
+--변수, 조건문, 반복문 등을 수행
+
+--==스칼라 방식
+--==레퍼런스 방식싟
+--    1. EMP.EMPNO%TYPE
+--    2. EMP%ROWTYPE
+
+--==사용자 정의 변수 타입
+--    1. 테이블 TYPE
+--    2. 레코드 TYPE
+
+  
+DECLARE--선택
+        변수 정의
+        --스칼라 방식
+        --VEMPNO NUMBER(4);
+        레퍼런스 방식
+        VEMPNO EMP.EMPNO%TYPE;  --기본 테이블의 컬럼의 타입을 참조한다.
+BEGIN--필수
+        SQL구문 작성   
+        출력구문 작성 --쿼리문의 수행결과를 반드시 출력함수를 통해서 확인해야 한다.
+EXCEPTION--선택
+        예외처리 구문
+END;
+/
+--
+SET SERVEROUTPUT ON;  --결과물 출력
+--
+BEGIN
+       DBMS_OUTPUT.PUT_LINE('HIHIHIHIHI, ORACLE');  --출력함수
+       END;
+       /
+--
+DECLARE
+--       VEMPNO NUMBER(4);  --변수의 선언
+--       VENAME VARCHAR2(10);
+          VEMPNO CONSTANT NUMBER(4) := 7777;  --(변수명 CONSTANT 자료형 => 상수의 정의)
+          VENAME VARCHAR2(10) := 'SCOTT'; --변수의 선언과 동시에 초기화
+--       VENAME VARCHAR2(10) NOT NULL := 'SCOTT'; -- NULL 값을 변수의 값으로 사용 할 수 없다.
+--       VENAME VARCHAR2(10) DEFAULT := 'SCOTT';   --(변수명 자료형 DEFAULT =>변수에 저장할 기본값 지정)
+BEGIN       
+--       VEMPNO := 7777;   --변수의 초기화
+--       VENAME :='SCOTT';
+       
+       DBMS_OUTPUT.PUT_LINE(' 사원 / 이름 ');
+       DBMS_OUTPUT.PUT_LINE(VEMPNO ||'  '|| VENAME);
+       END;
+       /
+--       
+DECLARE
+                 VEMPNO EMP.EMPNO%TYPE;
+                 VENAME EMP.ENAME%TYPE;
+BEGIN
+                 SELECT EMPNO,ENAME 
+                 INTO VEMPNO , VENAME  --INTO절 필수
+                 FROM EMP
+                 WHERE EMPNO = 7788;     --WHERE절 필수
+                 
+                 DBMS_OUTPUT.PUT_LINE('사번 / 이름 ');
+                 DBMS_OUTPUT.PUT_LINE(VEMPNO ||' '|| VENAME);
+END;
+/
+--예외처리(EXCEPTION)
+DECLARE
+                 VEMPNO EMP.EMPNO%TYPE;
+                 VENAME EMP.ENAME%TYPE;
+BEGIN
+                 SELECT EMPNO,ENAME 
+                 INTO VEMPNO,VENAME 
+                 FROM EMP
+                 WHERE EMPNO = 7788;    
+                 
+                 DBMS_OUTPUT.PUT_LINE('사번 / 이름 ');
+                 DBMS_OUTPUT.PUT_LINE(VEMPNO ||' '|| VENAME);
+EXCEPTION 
+    WHEN TOO_MANY_ROWS THEN DBMS_OUTPUT.PUT_LINE('행의 수가 여러개 입니다.');
+    WHEN OTHERS THEN DBMS_OUTPUT.PUT_LINE('모든 예외에 대한 처리');
+END;
+/
+--배열
+DECLARE
+            --테이블 TYPE(사용자 정의 변수 타입)
+            --배열의 형식
+            --VENAME VARCHAR(10)
+            TYPE ENAME_TABLE_TYPE IS TABLE OF EMP.ENAME%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE EMPNO_TABLE_TYPE IS TABLE OF EMP.EMPNO%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE MGR_TABLE_TYPE IS TABLE OF EMP.MGR%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE HIREDATE_TABLE_TYPE IS TABLE OF EMP.HIREDATE%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE SAL_TABLE_TYPE IS TABLE OF EMP.SAL%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE COMM_TABLE_TYPE IS TABLE OF EMP.COMM%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE DEPTNO_TABLE_TYPE IS TABLE OF EMP.DEPTNO%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            TYPE JOB_TABLE_TYPE IS TABLE OF EMP.JOB%TYPE
+            INDEX BY BINARY_INTEGER;
+            
+            enameArr ENAME_TABLE_TYPE;   --배열형식의 변수 선언
+            jobArr JOB_TABLE_TYPE;
+            empnoArr EMPNO_TABLE_TYPE; 
+            mgrArr MGR_TABLE_TYPE; 
+            hiredateArr HIREDATE_TABLE_TYPE; 
+            salArr SAL_TABLE_TYPE; 
+            commArr COMM_TABLE_TYPE; 
+            deptnoArr DEPTNO_TABLE_TYPE;
+            i  BINARY_INTEGER := 0;
+BEGIN
+            FOR K IN (SELECT ENAME,JOB,EMPNO,MGR,HIREDATE,SAL,COMM,DEPTNO FROM EMP) LOOP
+            i := i + 1;
+            enameArr(i) := k.ename;
+            jobArr(i) := k.job;
+            empnoArr(i) := k.empno;
+            mgrArr(i) := k.mgr;
+            hiredateArr(i) := k.hiredate;
+            salArr(i) := k.sal;
+            commArr(i) := k.comm;
+            deptnoArr(i) := k.deptno;
+            END LOOP;
+            
+            FOR J IN 1..i LOOP
+            DBMS_OUTPUT.PUT_LINE(enameArr(j) || ' / ' || jobArr(j) || ' / ' || empnoArr(j) || ' / ' || 
+            mgrArr(j) || ' / ' || hiredateArr(j) || ' / ' || salArr(j) || ' / ' || commArr(j) || ' / ' || deptnoArr(j) );
+            END LOOP;
+END;
+/
+--레코드타입
+DECLARE
+        --레코드 TYPE(여러개의 변수를 묶어서 사용한다) => 사용자 정의 변수 타입
+        --클래스랑 유사하다.
+            
+            TYPE EMP_RECORD_TYPE IS RECORD(
+                   V_EMPNO EMP.EMPNO%TYPE,
+                   V_ENAME EMP.ENAME%TYPE,
+                   V_JOB EMP.JOB%TYPE,
+                   V_DEPTNO EMP.DEPTNO%TYPE    );
+                   
+             EMP_RECORD EMP_RECORD_TYPE ; --레코드 타입의 변수 선언;      
+BEGIN
+           SELECT EMPNO,ENAME,JOB,DEPTNO
+           INTO EMP_RECORD FROM EMP
+           WHERE EMPNO = 7788;
+           
+           DBMS_OUTPUT.PUT_LINE(EMP_RECORD.V_EMPNO || ' ' ||  EMP_RECORD.V_ENAME 
+           || ' ' || EMP_RECORD.V_JOB || ' ' || EMP_RECORD.V_DEPTNO);
+END;
+/
+--묶기(RECORD)
+CREATE TABLE DEPT_REC AS SELECT * FROM DEPT;
+
+DECLARE
+           TYPE REC_DEPT IS RECORD(V_DEPTNO DEPT_RECORD.DEPTNO%TYPE,
+                                               V_DNAME DEPT_RECORD.DNAME%TYPE,
+                                               V_LOC DEPT_RECORD.LOC%TYPE ) ;
+           DEPT_REC REC_DEPT ;                                    
+BEGIN
+          DEPT_REC.V_DEPTNO := 50;
+          DEPT_REC.V_DNAME := 'DEV';
+          DEPT_REC.V_LOC := 'BUSAN';
+          
+          INSERT INTO DEPT_RECORD
+          VALUES DEPT_REC;
+END;
+/
+SELECT*FROM DEPT_RECORD;
+--추가(UPDATE)
+DECLARE
+             TYPE REC_DEPT IS RECORD(V_DEPTNO DEPT_RECORD.DEPTNO%TYPE NOT NULL := 99 ,
+                                               V_DNAME DEPT_RECORD.DNAME%TYPE,
+                                               V_LOC DEPT_RECORD.LOC%TYPE    );
+          DEPT_REC REC_DEPT;                                     
+BEGIN
+          DEPT_REC.V_DEPTNO :=50;
+          DEPT_REC.V_DNAME := 'INSA';
+          DEPT_REC.V_LOC := 'SEOUL';
+          
+          UPDATE DEPT_RECORD
+          SET DNAME =  DEPT_REC.V_DNAME, LOC = DEPT_REC.V_LOC
+          WHERE DEPTNO = DEPT_REC.V_DEPTNO;
+END;
+/
+SELECT*FROM DEPT_RECORD;
+--삭제(DELETE)
+DECLARE
+      V_DEPTNO DEPT_RECORD.DEPTNO%TYPE := 50;
+BEGIN
+      DELETE FROM DEPT_RECORD
+      WHERE DEPTNO = V_DEPTNO;
+END;
+/
+SELECT*FROM DEPT_RECORD;
+--ROWTYPE
+DECLARE
+  --%ROWTYPE : 테이블의 모든 컬럼의 이름과 변수를 참조하겠다.
+  --컬럼명과 컬럼의 타입을 변수명과 변수의 타입으로 사용한다.
+         VEMP EMP%ROWTYPE;
+                      
+BEGIN
+         SELECT * INTO VEMP 
+         FROM EMP
+         WHERE EMPNO = 7788;
+         
+         DBMS_OUTPUT.PUT_LINE(VEMP.EMPNO);       DBMS_OUTPUT.PUT_LINE(VEMP.SAL);
+         DBMS_OUTPUT.PUT_LINE(VEMP.ENAME);       DBMS_OUTPUT.PUT_LINE(VEMP.DEPTNO);
+         DBMS_OUTPUT.PUT_LINE(VEMP.JOB);           DBMS_OUTPUT.PUT_LINE(VEMP.MGR);
+         DBMS_OUTPUT.PUT_LINE(VEMP.HIREDATE);    DBMS_OUTPUT.PUT_LINE(VEMP.COMM);       
+END;
+/
+
+--====조건문
+-- IF THEN END IF;
+-- IF THEN ELSE END IF;
+-- IF THEN ELSIF THEN END IF;
+
+--조건문(IF)
+DECLARE
+             VEMPNO NUMBER(4);
+             VENAME VARCHAR2(10);
+             VDEPTNO VARCHAR2(10);
+             VDNAME VARCHAR2(10)  := NULL ;
+BEGIN
+             SELECT EMPNO,ENAME,DEPTNO
+             INTO VEMPNO,VENAME,VDEPTNO
+             FROM EMP
+             WHERE EMPNO = 7788;
+             
+             IF (VDEPTNO = 10/*조건식*/) THEN 
+                        VDNAME := 'AAA'/*실행문*/;
+             END IF;           
+             IF (VDEPTNO = 20) THEN 
+                        VDNAME := 'BBB'  ;
+             END IF;           
+             IF (VDEPTNO = 30) THEN 
+                        VDNAME := 'CCC'   ;
+             END IF;           
+             IF (VDEPTNO = 40) THEN 
+                        VDNAME := 'DDD'    ;   
+             END IF;
+             
+             DBMS_OUTPUT.PUT_LINE('부서명 : ' || VDNAME);
+END;
+/
+--IF & ROWTYPE
+DECLARE
+              VEMP EMP%ROWTYPE;
+              ANNSAL/*연봉*/ NUMBER(7,2);
+BEGIN
+              SELECT * INTO VEMP 
+              FROM EMP
+              WHERE EMPNO = 7788; 
+                            
+              IF ( VEMP.COMM IS NULL) THEN
+                   VEMP.COMM := 0;
+              END IF;
+              
+              ANNSAL := VEMP.SAL*12+VEMP.COMM;
+              
+              DBMS_OUTPUT.PUT_LINE('사번 : ' || VEMP.EMPNO || ' 번 '  || ' 이름 : ' || VEMP.ENAME || ' 연봉 : ' || ANNSAL || '$');
+END;
+/
+--IF ELSE문
+DECLARE
+              VEMP EMP%ROWTYPE;
+              ANNSAL/*연봉*/ NUMBER(7,2);
+BEGIN
+              SELECT * INTO VEMP 
+              FROM EMP
+              WHERE EMPNO = 7788; 
+                            
+              IF ( VEMP.COMM IS NULL) THEN
+                    ANNSAL := VEMP.SAL*12;
+              ELSE 
+                    ANNSAL := VEMP.SAL*12 +VEMP.COMM;
+              END IF;      
+              
+              DBMS_OUTPUT.PUT_LINE('사번 : ' || VEMP.EMPNO || ' 번 '  || ' 이름 : ' || VEMP.ENAME || ' 연봉 : ' || ANNSAL || '$');
+END;
+/
+--다중IF문
+DECLARE
+             VEMP EMP%ROWTYPE;
+             VDNAME VARCHAR2(10);
+BEGIN
+             SELECT *
+             INTO VEMP
+             FROM EMP
+             WHERE EMPNO = 7788;
+             
+             IF (VEMP.DEPTNO = 10) THEN 
+                        VDNAME := 'AAA';
+             ELSIF (VEMP.DEPTNO = 20) THEN 
+                        VDNAME := 'BBB' ; 
+             ELSIF (VEMP.DEPTNO = 30) THEN 
+                        VDNAME := 'CCC';   
+             ELSIF (VEMP.DEPTNO = 40) THEN 
+                        VDNAME := 'DDD' ;      
+                          
+             END IF;
+             
+             DBMS_OUTPUT.PUT_LINE('부서명 : ' || VDNAME);
+END;
+/
+
+--====반복문
+--LOOP
+--     실행문 (무한 반복문)
+--     무한반복문의 제어
+--     1. EXIT-WHEN : 반복 종료를 위한 조건식 지정
+--     2.IF THEN END IF;
+--END LOOP;
+
+--LOOP AND LOOP;
+--FOR IN LOOP END LOOP;
+-- WHILE LOOP END LOOP;
+
+
+--반복 제어문(EXIT-WHEN)
+DECLARE
+   N NUMBER := 1;
+BEGIN
+   LOOP
+            DBMS_OUTPUT.PUT_LINE(N);
+            N :=N+1;
+            EXIT WHEN N > 100;
+            END LOOP;
+END;
+/
+--FOR LOOP
+BEGIN
+       --IN 구문 뒤에 작성되는 값이 반복의 횟수를 결정
+       FOR N IN 1..10 LOOP    --IN 시작값..종료값 1씩 증가 (1 ~ 10) ->  10회 반복
+               DBMS_OUTPUT.PUT_LINE(N);
+       END LOOP;
+END;
+/
+--역순 FOR LOOP
+BEGIN
+       FOR N IN REVERSE 1..10 LOOP
+               DBMS_OUTPUT.PUT_LINE(N);
+       END LOOP;
+END;
+/
+--FOR SELECT문에서
+DECLARE
+          VDEPT DEPT%ROWTYPE;
+BEGIN
+    FOR N IN 1..4 LOOP
+        SELECT* 
+        INTO VDEPT
+        FROM DEPT
+        WHERE DEPTNO = 10 * N;
+        DBMS_OUTPUT.PUT_LINE(VDEPT.DEPTNO || ' ' || VDEPT.DNAME || ' ' || VDEPT.LOC);
+        END LOOP;
+END;
+/
+--WHILE LOOP
+--BEGIN 
+--     WHILE 조건식 LOOP
+--END LOOP;
+
+DECLARE
+      N NUMBER := 1;
+BEGIN
+      WHILE N <= 10 LOOP
+      DBMS_OUTPUT.PUT_LINE(N);
+      N := N + 1 ;
+      END LOOP;
+      
+END;
+/
+--
+DECLARE
+          VDEPT DEPT%ROWTYPE;
+          N NUMBER := 1;
+BEGIN
+    WHILE N <=4 LOOP
+        SELECT* 
+        INTO VDEPT
+        FROM DEPT
+        WHERE DEPTNO = 10 * N;
+        DBMS_OUTPUT.PUT_LINE(VDEPT.DEPTNO || ' ' || VDEPT.DNAME || ' ' || VDEPT.LOC);
+        N := N+1;
+        END LOOP;
+END;
+/
+
+--==P=L=/=S=Q=L=====E=N=D================================================
 
 
