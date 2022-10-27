@@ -1497,7 +1497,7 @@ SET ROLE ALL;
 --==사=용=자=, =권=한=, =롤= =관=리===E=N=D=======================================
 
 
---==P=L=/=S=Q=L=====S=T=A=R=T================================================
+--==P=L=/=S=Q=L==기초===S=T=A=R=T================================================
 --Procedural Language / SQL
 --확장되어진 SQL언어(ORACLE 전용)
 --변수, 조건문, 반복문 등을 수행
@@ -1576,7 +1576,7 @@ BEGIN
                  DBMS_OUTPUT.PUT_LINE(VEMPNO ||' '|| VENAME);
 EXCEPTION 
     WHEN TOO_MANY_ROWS THEN DBMS_OUTPUT.PUT_LINE('행의 수가 여러개 입니다.');
-    WHEN OTHERS THEN DBMS_OUTPUT.PUT_LINE('모든 예외에 대한 처리');
+    WHEN OTHERS/*exception*/ THEN DBMS_OUTPUT.PUT_LINE('모든 예외에 대한 처리');
 END;
 /
 --배열
@@ -1703,7 +1703,7 @@ END;
 SELECT*FROM DEPT_RECORD;
 --ROWTYPE
 DECLARE
-  --%ROWTYPE : 테이블의 모든 컬럼의 이름과 변수를 참조하겠다.
+  --%ROWTYPE : 테이블의 모든 컬럼의 이름과 타입을 참조하겠다.
   --컬럼명과 컬럼의 타입을 변수명과 변수의 타입으로 사용한다.
          VEMP EMP%ROWTYPE;
                       
@@ -1767,7 +1767,7 @@ BEGIN
               
               ANNSAL := VEMP.SAL*12+VEMP.COMM;
               
-              DBMS_OUTPUT.PUT_LINE('사번 : ' || VEMP.EMPNO || ' 번 '  || ' 이름 : ' || VEMP.ENAME || ' 연봉 : ' || ANNSAL || '$');
+              DBMS_OUTPUT.PUT_LINE('사번 : ' || VEMP.EMPNO || '번 '  || ' 이름 : ' || VEMP.ENAME || ' 연봉 : ' || ANNSAL || '$');
 END;
 /
 --IF ELSE문
@@ -1890,12 +1890,302 @@ BEGIN
         INTO VDEPT
         FROM DEPT
         WHERE DEPTNO = 10 * N;
-        DBMS_OUTPUT.PUT_LINE(VDEPT.DEPTNO || ' ' || VDEPT.DNAME || ' ' || VDEPT.LOC);
         N := N+1;
+        DBMS_OUTPUT.PUT_LINE(VDEPT.DEPTNO || ' ' || VDEPT.DNAME || ' ' || VDEPT.LOC);
+       
         END LOOP;
 END;
 /
 
---==P=L=/=S=Q=L=====E=N=D================================================
+--==P=L=/=S=Q=L==기초===E=N=D================================================
 
 
+--==저=장=서=브=프=로=그=램===S=T=A=R=T=====================================
+
+--저장 서브프로그램(stored subprogram) : 이름을 지정하여 오라클에 저장하는 프로그램 
+--이름지정/오라클저장/저장할때 한번만 컴파일/공유하여 사용가능/다른 응용프로그램에서 호출가능
+
+
+--====저장 프로시저(stored procedure)
+
+--생성(CREATE) -> 실행(EXECUTE/EXEC)    [2단계 과정]
+
+CREATE OR REPLACE PROCEDURE 프로시저명(매개변수)
+IS AS
+       변수 정의
+BEGIN
+         SQL
+         출력구문
+         조건문, 반복문
+EXCEPTION
+       예외처리부
+END;
+/
+
+--생성 과정
+CREATE OR REPLACE PROCEDURE EMP01_PRINT
+IS
+   VEMPNO NUMBER(10);
+   VENAME VARCHAR2(10);
+BEGIN
+   VEMPNO := 1111;
+   VENAME := 'HONG';
+   
+   DBMS_OUTPUT.PUT_LINE(VEMPNO || ' ' || VENAME);
+END;
+/
+
+--기본 실행
+EXECUTE EMP01_PRINT;
+--PL/SQL 블록에서 프로시저 실행
+BEGIN 
+    EMP01_PRINT;
+END;
+/
+
+--기본삭제
+DROP PROCEDURE EMP01_PRINT;
+--PL/SQL 블록에서 프로시저 삭제
+CREATE OR REPLACE PROCEDURE EMP01_DEL
+IS
+BEGIN
+   DELETE FROM EMP01;
+END;
+/
+--PL/SQL 블록에서 프로시저 부분삭제  ****
+CREATE OR REPLACE PROCEDURE DEL_ENAME(VENAME EMP01.ENAME%TYPE)
+IS
+BEGIN
+            DELETE FROM EMP01
+            WHERE ENAME = VENAME;
+END;
+/
+EXEC DEL_ENAME('SCOTT');
+EXEC DEL_ENAME('SMITH');
+SELECT*FROM EMP01
+WHERE ENAME = 'SCOTT';
+WHERE ENAME = 'SMITH';
+
+--저장 프로시져의 매개변수 유형
+--IN : 값을 전달받는 용도  
+--OUT : 프로시저 내부의 실행 결과를 실행을 호출한 쪽으로 반환
+--IN OUT : 호출 값 입력받고 실행 결과 값 반환(IN+OUT)
+
+CREATE OR REPLACE PROCEDURE SEL_EMPNO
+(         VEMPNO /*IN(기본값이라 생략가능)*/ EMP.EMPNO%TYPE,
+          VENAME OUT EMP.ENAME%TYPE,
+          VSAL OUT EMP.SAL%TYPE,
+          VJOB OUT EMP.JOB%TYPE
+)
+IS
+BEGIN
+            SELECT ENAME, SAL, JOB
+            INTO VENAME, VSAL, VJOB
+            FROM EMP
+            WHERE EMPNO = VEMPNO;
+          
+END;
+/
+--바인드 변수 : 매개변수 OUT(= IN OUT) 을 사용 할때 외부로 반환 해야 하기때문에 사용한다.
+VARIABLE VAR_ENAME VARCHAR2(15);
+VARIABLE VAR_SAL NUMBER;  --바인드 변수에서는 숫자크기는 지정 불가
+VARIABLE VAR_JOB VARCHAR2(9);
+
+EXEC SEL_EMPNO(7499, :VAR_ENAME , :VAR_SAL, :VAR_JOB);
+
+PRINT VAR_ENAME;
+PRINT VAR_SAL;
+PRINT VAR_JOB;
+
+--사원 정보를 저장하는 저장 프로시저를 만드기
+--EMPTNO,ENAME,JOB,MGR
+--사원 정보는 매개변수를 사용해서 받아 온다.
+CREATE TABLE EMP02 AS SELECT EMPNO,ENAME,JOB,MGR,DEPTNO FROM EMP WHERE 1 != 1;
+DROP PROCEDURE INSERT_SAWON;
+CREATE OR REPLACE PROCEDURE INSERT_SAWON
+(         VEMPNO EMP02.EMPNO%TYPE,
+          VENAME EMP02.ENAME%TYPE,
+          VJOB EMP02.JOB%TYPE,
+          VMGR EMP02.MGR%TYPE,
+          VDEPTNO EMP02.DEPTNO%TYPE
+ )
+IS
+BEGIN
+         INSERT INTO EMP02
+         VALUES(VEMPNO,VENAME,VJOB,VMGR,VDEPTNO);
+END;
+/
+
+EXEC INSERT_SAWON(1111, 'HONG' ,'SALES' ,2222 ,10) ;
+
+SELECT *FROM EMP02;
+
+
+--====저장 함수(stored fuction)
+--저장프로시저와 차이점은 RETURN값이 있다.
+--생성(CREATE) -> 실행(EXECUTE)
+
+CREATE OR REPLACE FUNCTION 함수명(매개변수)
+      RETURN 값의 타입 --세미콜론 X
+IS
+
+BEGIN
+      SQL구문
+      출력함수
+      조건문, 반복문
+      RETURN 리턴 값    -- 세미클론 O
+END;
+/
+--생성 -> 실행 과정
+CREATE OR REPLACE FUNCTION CAL_BONUS(VEMPNO EMP.EMPNO%TYPE)
+      RETURN NUMBER
+IS
+      VSAL NUMBER(7,2);
+BEGIN
+      SELECT SAL
+      INTO VSAL
+      FROM EMP
+      WHERE EMPNO = VEMPNO;
+      
+      RETURN VSAL*200 ;
+END;
+/
+VARIABLE VAR_RES NUMBER;
+
+EXEC :VAR_RES := CAL_BONUS(7902);       
+PRINT :VAR_RES;
+--삭제
+DROP FUNCTION CAL_BONUS;
+
+--====패키지(package) :
+--====트리거(trigger) :
+
+
+--===C=U=R=S=O=R===S=T=A=R=T=========================================
+--SELECT 구문이 실행하는 결과를 가르킨다.
+
+DECLARE
+        CURSOR 커서명 IS SQL구문(SELECT);   --커서 선언
+BEGIN
+        OPEN 커서명;                                 --커서 열기  
+        LOOP
+        FETCH 커서명 INTO 변수;                  --커서로 읽은 데이터 사용
+        EXIT WHEN 커서명%NOTFOUND;
+        END LOOP;
+        CLOSE 커서명;                               --커서 닫기
+END;
+/
+--기본 커서 피라미터 사용
+DECLARE
+             CURSOR C1 IS 
+             SELECT *FROM EMP;
+             VEMP EMP%ROWTYPE;
+BEGIN
+             OPEN C1;
+          LOOP
+             FETCH C1 INTO VEMP;
+             EXIT WHEN C1%NOTFOUND;
+             DBMS_OUTPUT.PUT_LINE(VEMP.EMPNO || ' ' || VEMP.ENAME || ' ' || VEMP.JOB || ' ' || 
+             VEMP.MGR || ' ' || VEMP.HIREDATE || ' ' || VEMP.SAL || ' ' || VEMP.COMM || ' ' || VEMP.DEPTNO);
+         END LOOP;
+             CLOSE C1;
+END;
+/
+--FOR문 활용
+DECLARE
+              CURSOR C1 IS SELECT * FROM DEPT;
+              VDEPT DEPT%ROWTYPE;
+BEGIN
+              FOR VDEPT IN C1 LOOP
+              EXIT WHEN C1%NOTFOUND;
+              DBMS_OUTPUT.PUT_LINE(VDEPT.DEPTNO || ' ' ||  VDEPT.DNAME || ' ' || VDEPT.LOC );
+          END LOOP;
+END;
+/
+
+--===C=U=R=S=O=R===E=N=D==========================================
+
+
+--HR>아이디,이름,이름의 성, 부서이름
+--EMPLOYEES , DEPARTMENTS
+
+--JOIN 방식
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, DEPARTMENT_NAME
+FROM EMPLOYEES E INNER JOIN DEPARTMENTS D 
+ON E.DEPARTMENT_ID = D.DEPARTMENT_ID
+WHERE E.DEPARTMENT_ID = 100;
+
+SELECT COUNT(*) FROM EMPLOYEES;
+
+SELECT*FROM EMPLOYEES
+WHERE DEPARTMENT_ID IS NULL;
+
+--서브쿼리 방식
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, DEPARTMENT_ID, 
+                (
+                   SELECT DEPARTMENT_NAME
+                   FROM DEPARTMENTS D          
+                   WHERE E.DEPARTMENT_ID = D.DEPARTMENT_ID
+                   )AS DEP_NAMES
+FROM EMPLOYEES E
+WHERE E.DEPARTMENT_ID = 100;
+
+--프로시저(함수) 방식
+CREATE OR REPLACE FUNCTION GET_DEP_NAME(DEPT_ID NUMBER/*스칼라방식에선 숫자지정 X*/)
+             RETURN VARCHAR2
+IS                            
+            sDEPNAME VARCHAR2(30);
+BEGIN
+            SELECT DEPARTMENT_NAME
+            INTO sDEPNAME
+            FROM DEPARTMENTS
+            WHERE DEPARTMENT_ID = DEPT_ID;
+            
+            RETURN sDEPNAME;
+END;
+/
+VARIABLE VAR_DEPTNAME VARCHAR2(30);
+EXEC :VAR_DEPTNAME := GET_DEP_NAME(90);
+PRINT :VAR_DEPTNAME;
+--------
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, GET_DEP_NAME(DEPARTMENT_ID)
+FROM EMPLOYEES E
+WHERE E.DEPARTMENT_ID = 90;
+--------
+--HR> EMPLOYEE_ID, FIRST_NAME, LAST_NAME, JOB_TITLE
+--JOBS EMPLYEES
+
+--JOIN방식
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, JOB_TITLE
+FROM EMPLOYEES E INNER JOIN JOBS J 
+ON E.JOB_ID = J.JOB_ID
+WHERE E.EMPLOYEE_ID = 100;
+
+--서브쿼리방식
+SELECT EMPLOYEE_ID, FIRST_NAME, LAST_NAME, 
+                (
+                   SELECT JOB_TITLE
+                   FROM JOBS J         
+                   WHERE D.JOB_ID = J.JOB_ID
+                   )AS JOB_TITLE
+FROM EMPLOYEES D
+WHERE D.EMPLOYEE_ID = 100;
+
+--프로시저(함수) 방식  (GET_JOB_TITLE() )
+CREATE OR REPLACE FUNCTION GET_JOB_TITLE(J_ID VARCHAR)
+             RETURN VARCHAR2                    
+IS                            
+            sJOBNAME VARCHAR2(30);
+BEGIN
+            SELECT JOB_TITLE
+            INTO sJOBNAME
+            FROM JOBS
+            WHERE JOB_ID = J_ID;
+            
+            RETURN sJOBNAME;
+END;
+/
+
+VARIABLE VAR_JOBNAME VARCHAR2(30);
+EXEC :VAR_JOBNAME := GET_JOB_TITLE('AD_PRES');
+PRINT :VAR_JOBNAME;
